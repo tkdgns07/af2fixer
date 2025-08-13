@@ -61,7 +61,10 @@ def minimize_pdb(in_pdb: str, out_pdb: str, platform: str = 'CPU'):
     modeller.addHydrogens(forcefield=ff, pH=7.0)
     system = ff.createSystem(modeller.topology, nonbondedMethod=app.NoCutoff, constraints=app.HBonds)
     integrator = mm.LangevinIntegrator(300*unit.kelvin, 1.0/unit.picosecond, 0.004*unit.picoseconds)
-    plat = mm.Platform.getPlatformByName(platform) if platform in [p.name for p in [mm.Platform.getPlatform(0)] * mm.Platform.getNumPlatforms()] else mm.Platform.getPlatformByName('CPU')
+    try:
+        plat = mm.Platform.getPlatformByName(platform)
+    except Exception:
+        plat = mm.Platform.getPlatformByName('CPU')
     sim = app.Simulation(modeller.topology, system, integrator, plat)
     sim.context.setPositions(modeller.positions)
     mm.LocalEnergyMinimizer.minimize(sim.context, maxIterations=500)

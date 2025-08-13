@@ -29,37 +29,46 @@ ENV_NAME="af2fixer"
 PY_VER="3.10"
 
 if ! conda env list | awk '{print $1}' | grep -qx "$ENV_NAME"; then
-  conda create -y -n "$ENV_NAME" python="$PY_VER"
+  conda create -y -n "$ENV_NAME" "python=${PY_VER}"
 fi
-
 conda activate "$ENV_NAME"
 
-# Channels (need bioconda for hhsuite)
-conda config --add channels conda-forge || true
-conda config --add channels bioconda || true
+# Reset channels & solver for reproducibility
+conda config --remove-key channels 2>/dev/null || true
+conda config --add channels conda-forge
+conda config --add channels bioconda
+conda config --add channels defaults
 conda config --set channel_priority strict
+conda config --set solver libmamba || true
 
-# Core deps
-conda install -y \
+# Core deps from conda-forge
+conda install -y -c conda-forge \
+  "biopython>=1.81" \
   gemmi \
-  biopython \
+  openmm \
   numpy \
   pandas
 
-# OpenMM (some platforms prefer conda-forge openmm)
-conda install -y openmm
-
-# HH-suite (hhblits, hhsearch)
-conda install -y hhsuite
+# HHsuite from bioconda
+conda install -y -c bioconda hhsuite
 
 # Optional tools
-# conda install -y mmseqs2
+# conda install -y -c bioconda mmseqs2
 # pip install 'colabfold[alphafold]'
 
 python - <<'PY'
-import sys, platform
-print("[OK] Python", sys.version)
+import sys, platform, importlib
+mods = ["Bio", "gemmi", "numpy", "pandas"]
+print("[OK] Python", sys.version.split()[0])
 print("[OK] Platform", platform.platform())
+for m in mods:
+    importlib.import_module(m)
+    print(f"[OK] import {m}")
+try:
+    import openmm
+    print("[OK] openmm", openmm.__version__)
+except Exception as e:
+    print("[WARN] openmm import failed:", e)
 PY
 
-echo "[DONE] Environment '$ENV_NAME' is ready."
+echo "[DONE] Environment '${ENV_NAME}' is ready."

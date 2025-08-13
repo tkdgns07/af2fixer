@@ -52,6 +52,7 @@ def write_report(outdir: Path, plddt_stats, pae_stats, clashes):
         for ch, rn, v in plddt_stats:
             f.write(f"{ch},{rn},{v:.2f}\n")
     if pae_stats is not None:
+        import numpy as np
         np.savetxt(outdir / 'pae_mean.txt', np.array([np.mean(pae_stats)]), fmt='%.3f')
 
 def main():
@@ -66,8 +67,10 @@ def main():
         with open(args.pae) as f:
             pae = json.load(f)
         if isinstance(pae, dict) and 'pae' in pae:
+            import numpy as np
             pae_stats = np.array(pae['pae'], dtype=float)
         elif isinstance(pae, list):
+            import numpy as np
             pae_stats = np.array(pae, dtype=float)
     clashes = count_clashes(args.pdb)
     write_report(Path(args.outdir), plddt_stats, pae_stats, clashes)

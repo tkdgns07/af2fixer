@@ -21,6 +21,7 @@ def main():
     ap.add_argument('--flank', type=int, default=25)
     args = ap.parse_args()
 
+    from Bio import SeqIO
     records = list(SeqIO.parse(args.input, 'fasta'))
     if len(records) != 1:
         raise SystemExit('[ERROR] Expect single-sequence FASTA')

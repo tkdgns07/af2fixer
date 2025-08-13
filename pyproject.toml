@@ -1,0 +1,10 @@
+[project]
+name = "af2fixer"
+version = "0.1.0"
+description = "AlphaFold2-based loop fixer pipeline with HHsearch balancing"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+af2fixer = "af2fixer.cli:main"

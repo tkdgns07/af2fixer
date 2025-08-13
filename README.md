@@ -1,65 +1,55 @@
-#af2fixer
+# af2fixer
 
-AlphaFold/ColabFold 결과와 템플릿 구조를 이용해 결손(loop) 구간을 보수하고,
-HHsearch 템플릿 밸런싱 단계까지 포함한 파이프라인 예시.
+AF2 loop-fixer pipeline with HHsearch balancing. Now with a single CLI: `af2fixer`.
 
-## 환경 설치
+## 0) Environment
 ```bash
 bash env_setup/install_env.sh
 conda activate af2fixer
 ```
-* `hhsuite`(hhblits, hhsearch), `openmm`, `gemmi`, `biopython` 등을 conda로 설치합니다.
-* ColabFold는 별도 설치가 필요할 수 있습니다. (`pip install 'colabfold[alphafold]'` 등)
 
-## 디렉토리
-```
-af2fixer/
-├── env_setup/
-│   └── install_env.sh
-├── preprocessing/
-│   ├── pdb_to_mmcif_and_renumber.py
-│   ├── mask_template.py
-│   └── make_window_fasta.py
-├── colabfold/
-│   └── run_af2.py
-├── balancing/
-│   ├── run_hhsearch.py
-│   └── select_templates.py
-├── postprocessing/
-│   ├── blend_with_template.py
-│   ├── graft_and_minimize.py
-│   └── quality_check.py
-└── scripts/
-    └── run_pipeline.sh
-```
-
-## 워크플로우 개요
-1) 전처리: 템플릿 정리(mmCIF 변환·리넘버링, 결손 구간 마스킹), 윈도우 FASTA 생성  
-2) 1차 추론: ColabFold (템플릿 OFF)  
-3) 밸런싱: HHblits→HHsearch로 템플릿 후보 검색, Top-N 목록 생성  
-4) 2차 추론: ColabFold (템플릿 ON)  
-5) 그래프팅+최소화: 예측 루프를 템플릿 구간에 덮어쓰기 후 OpenMM 최소화  
-6) 품질 리포트: pLDDT/PAE/클래시 요약
-
-## 사용 예시(일괄 실행 스크립트)
-`scripts/run_pipeline.sh`를 열어 경로/파라미터를 수정한 뒤 실행하세요.
+## 1) Install CLI (editable)
 ```bash
-bash scripts/run_pipeline.sh
+pip install -e .
+# Now you have the command: af2fixer
 ```
 
-## 좌표 블렌딩(선택)
-템플릿(T)과 예측(P)을 특정 구간에서 `X = (1-α)T + αP`로 섞고 싶다면:
+## 2) Quick demo (downloads PDB, random gap, prepares inputs)
 ```bash
-python postprocessing/blend_with_template.py \
-  --template template_masked.cif \
-  --pred runs/af2_r2/*rank_001*.pdb \
-  --out blended.pdb \
-  --ranges "A:100-130" \
-  --alpha 0.35
+af2fixer demo 1UBQ --chain A --flank 25
 ```
 
-## 주의사항
-- HHsuite DB 경로는 로컬에 맞게 지정하세요. 예) `uniclust30_2018_08`, `pdb70` 등.
-- `colabfold_batch`의 템플릿 디렉토리 직접 지정은 버전에 따라 지원이 다릅니다. 기본적으로 `--use-templates`로 내부 파이프라인을 사용하세요.
-- `graft_and_minimize.py`의 매핑 길이는 일치해야 합니다. 번호 미스매치 시 에러가 발생합니다.
-- OpenMM 최소화는 진공(NoCutoff)에서 간단히 수행합니다. 필요 시 cutoff/solvent/제약 조건을 조정하세요.
+## 3) HHsearch balancing (requires local DBs)
+```bash
+af2fixer hhsearch \
+  --fasta runs/1UBQ_A_demo/windows.fasta \
+  --db-uniref /data/hhsuite_dbs/uniclust30_2018_08/uniclust30_2018_08 \
+  --db-pdb    /data/hhsuite_dbs/pdb70/pdb70 \
+  --out runs/1UBQ_A_demo/hhs --threads 8 --top 5
+```
+
+## 4) Run ColabFold
+```bash
+af2fixer af2 --fasta runs/1UBQ_A_demo/windows.fasta --out runs/1UBQ_A_demo/af2_r1 \
+  --model-type alphafold2_ptm --recycles 3
+# (with templates)
+af2fixer af2 --fasta runs/1UBQ_A_demo/windows.fasta --out runs/1UBQ_A_demo/af2_r2 \
+  --model-type alphafold2_ptm --recycles 3 --use-templates
+```
+
+## 5) Graft + minimize
+```bash
+PRED=$(ls runs/1UBQ_A_demo/af2_r2/*rank_001*.pdb | head -n1)
+python postprocessing/graft_and_minimize.py \
+  --template runs/1UBQ_A_demo/template_masked.cif \
+  --pred "$PRED" \
+  --output runs/1UBQ_A_demo/grafted_minimized.pdb \
+  --map "A:100-130=1-31" --minimize --platform CPU
+```
+
+## 6) QC
+```bash
+af2fixer qc --pdb runs/1UBQ_A_demo/grafted_minimized.pdb --outdir runs/1UBQ_A_demo/qc
+```
+
+See `scripts/demo_random_gap.sh` for a fully worked preprocessing example.

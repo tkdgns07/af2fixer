@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-import argparse, re, sys, json
+import argparse, re, json
 from pathlib import Path
 
 def parse_hhr(path: str, top: int):
     hits = []
-    # crude HHR parser: look for lines starting with "No " and following "Probab", "E-value", "PDB", "Aligned_cols"
     pat = re.compile(r'^\s*No\s+(\d+)\s+')
     current = None
     with open(path, 'r') as f:
@@ -15,10 +14,8 @@ def parse_hhr(path: str, top: int):
                     if current: hits.append(current)
                     current = {"rank": int(m.group(1)), "raw": line.strip()}
             elif current and line.strip().startswith("Probab="):
-                # example: Probab=99.4  E-value=1.7e-31  Score=218.12  Aligned_cols=276  ...
                 current["probab"] = line.strip()
             elif current and line.strip().startswith("Template"):
-                # Template  1XYZ_A  <desc...>
                 toks = line.strip().split()
                 if len(toks) >= 2:
                     current["template"] = toks[1]

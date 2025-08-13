@@ -22,25 +22,10 @@ def main():
     a3m = outdir / "query.a3m"
     hhr = outdir / "pdb_hits.hhr"
 
-    # HHblits to build MSA
-    cmd1 = [
-        "hhblits",
-        "-i", args.fasta,
-        "-oa3m", str(a3m),
-        "-d", args.db_uniref,
-        "-cpu", str(args.threads),
-        "-n", "3"
-    ]
+    cmd1 = ["hhblits","-i", args.fasta,"-oa3m", str(a3m),"-d", args.db_uniref,"-cpu", str(args.threads),"-n","3"]
     print("[RUN]", " ".join(cmd1)); subprocess.run(cmd1, check=True)
 
-    # HHsearch against PDB db
-    cmd2 = [
-        "hhsearch",
-        "-i", str(a3m),
-        "-d", args.db_pdb,
-        "-o", str(hhr),
-        "-cpu", str(args.threads)
-    ]
+    cmd2 = ["hhsearch","-i", str(a3m),"-d", args.db_pdb,"-o", str(hhr),"-cpu", str(args.threads)]
     print("[RUN]", " ".join(cmd2)); subprocess.run(cmd2, check=True)
 
     print(f"[OK] Wrote {hhr}")

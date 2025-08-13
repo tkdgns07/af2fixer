@@ -1,4 +1,4 @@
-# af2pdb
+#af2fixer
 
 AlphaFold/ColabFold 결과와 템플릿 구조를 이용해 결손(loop) 구간을 보수하고,
 HHsearch 템플릿 밸런싱 단계까지 포함한 파이프라인 예시.
@@ -6,14 +6,14 @@ HHsearch 템플릿 밸런싱 단계까지 포함한 파이프라인 예시.
 ## 환경 설치
 ```bash
 bash env_setup/install_env.sh
-conda activate af2pdb
+conda activate af2fixer
 ```
 * `hhsuite`(hhblits, hhsearch), `openmm`, `gemmi`, `biopython` 등을 conda로 설치합니다.
 * ColabFold는 별도 설치가 필요할 수 있습니다. (`pip install 'colabfold[alphafold]'` 등)
 
 ## 디렉토리
 ```
-af2pdb/
+af2fixer/
 ├── env_setup/
 │   └── install_env.sh
 ├── preprocessing/

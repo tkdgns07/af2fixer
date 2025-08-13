@@ -25,7 +25,7 @@ source "$CONDA_BASE/etc/profile.d/conda.sh"
 # ==========================
 # Create env and install deps
 # ==========================
-ENV_NAME="af2pdb"
+ENV_NAME="af2fixer"
 PY_VER="3.10"
 
 if ! conda env list | awk '{print $1}' | grep -qx "$ENV_NAME"; then

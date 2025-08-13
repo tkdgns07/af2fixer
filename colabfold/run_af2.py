@@ -38,7 +38,7 @@ def main():
     # We still allow env var hook if a fork supports it.
     env = None
     if args.templates_dir:
-        env = dict(**os.environ); env["AF2PDB_TEMPLATES_DIR"] = str(Path(args.templates_dir).resolve())
+        env = dict(**os.environ); env["AF2FIXER_TEMPLATES_DIR"] = str(Path(args.templates_dir).resolve())
 
     cmd += [args.fasta, str(outdir)]
     print('[RUN]', ' '.join(cmd))

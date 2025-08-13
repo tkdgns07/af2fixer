@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Example end-to-end pipeline glue. Adjust paths/params for your case.
-# Requires conda env 'af2pdb' activated and necessary binaries installed.
+# Requires conda env 'af2fixer' activated and necessary binaries installed.
 
 # Inputs (edit me)
 FULL_FASTA="inputs/full.fasta"
